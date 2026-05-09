@@ -22,6 +22,15 @@ function BrandStripe() {
   );
 }
 
+function Spinner({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
+    </svg>
+  );
+}
+
 const LOADING_MESSAGES = [
   "Sending your room to AI…",
   "Analysing wall surfaces…",
@@ -45,7 +54,6 @@ export default function RoomPainter() {
   const [customHex, setCustomHex] = useState("#FFFFFF");
   const [usingCustom, setUsingCustom] = useState(false);
 
-  const [quality, setQuality] = useState<"low" | "medium">("medium");
   const [analyzing, setAnalyzing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState(0);
@@ -64,9 +72,8 @@ export default function RoomPainter() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
-      const b64 = dataUrl.split(",")[1];
       setOriginalUrl(dataUrl);
-      setImageBase64(b64);
+      setImageBase64(dataUrl.split(",")[1]);
       setMimeType(file.type);
       setImageLoaded(true);
       setGeneratedUrl(null);
@@ -96,7 +103,6 @@ export default function RoomPainter() {
     setAnalyzing(true);
     setAnalyzeError("");
     try {
-      // Downscale for API efficiency
       const img = new window.Image();
       img.src = originalUrl!;
       await new Promise((r) => (img.onload = r));
@@ -118,9 +124,7 @@ export default function RoomPainter() {
       setSelectedIdx(0);
       setUsingCustom(false);
     } catch (err: unknown) {
-      setAnalyzeError(
-        err instanceof Error ? err.message : "Analysis failed. Try again."
-      );
+      setAnalyzeError(err instanceof Error ? err.message : "Analysis failed.");
     } finally {
       setAnalyzing(false);
     }
@@ -131,12 +135,9 @@ export default function RoomPainter() {
     setGenerating(true);
     setPaintError("");
     setLoadingMsg(0);
-
-    // Rotate loading messages
     const interval = setInterval(() => {
       setLoadingMsg((n) => Math.min(n + 1, LOADING_MESSAGES.length - 1));
     }, 8000);
-
     try {
       const res = await fetch("/api/paint", {
         method: "POST",
@@ -146,19 +147,14 @@ export default function RoomPainter() {
           mimeType,
           colorName: activeColor.name,
           colorHex: activeColor.hex,
-          quality,
         }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-
-      const url = `data:image/png;base64,${data.imageBase64}`;
-      setGeneratedUrl(url);
+      setGeneratedUrl(`data:image/png;base64,${data.imageBase64}`);
       setView("generated");
     } catch (err: unknown) {
-      setPaintError(
-        err instanceof Error ? err.message : "Generation failed. Try again."
-      );
+      setPaintError(err instanceof Error ? err.message : "Generation failed.");
     } finally {
       clearInterval(interval);
       setGenerating(false);
@@ -188,60 +184,59 @@ export default function RoomPainter() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <header className="bg-corgan-navy text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded bg-corgan-gold flex items-center justify-center shadow">
-              <span className="text-white font-black text-2xl leading-none">C</span>
+
+      {/* ── Header ── */}
+      <header className="bg-corgan-navy text-white shadow-lg sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded bg-corgan-gold flex items-center justify-center shadow flex-shrink-0">
+              <span className="text-white font-black text-xl sm:text-2xl leading-none">C</span>
             </div>
             <div>
-              <p className="font-bold tracking-widest text-sm">CORGAN ENTERPRISES LTD.</p>
+              <p className="font-bold tracking-widest text-xs sm:text-sm leading-tight">CORGAN ENTERPRISES</p>
               <p className="text-corgan-gold-light text-xs font-medium">AI Room Colour Visualizer</p>
             </div>
           </div>
-          <p className="hidden sm:block text-xs text-corgan-navy-light text-right leading-5">
-            100% Indigenous-Owned Métis
-            <br />
-            General Contracting &amp; Facility Services
+          <p className="hidden md:block text-xs text-corgan-navy-light text-right leading-5">
+            100% Indigenous-Owned Métis<br />General Contracting &amp; Facility Services
           </p>
         </div>
         <BrandStripe />
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 lg:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-start">
 
-          {/* ── Left: image area ── */}
+          {/* ── Image column ── */}
           <div className="lg:col-span-2 flex flex-col gap-3">
 
             {/* Upload zone */}
             {!imageLoaded && (
               <div
-                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed min-h-[420px] transition-all cursor-pointer select-none ${
+                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all cursor-pointer select-none min-h-[260px] sm:min-h-[380px] ${
                   dragging
-                    ? "border-corgan-gold bg-corgan-gold/5 scale-[1.01]"
-                    : "border-gray-300 bg-white hover:border-corgan-gold/60"
+                    ? "border-corgan-gold bg-corgan-gold/5"
+                    : "border-gray-300 bg-white active:bg-gray-50"
                 }`}
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={onDrop}
                 onClick={() => fileRef.current?.click()}
               >
-                <div className="text-7xl mb-5 select-none">🏠</div>
-                <h2 className="text-xl font-semibold text-gray-700 mb-1">Upload a Room Photo</h2>
-                <p className="text-gray-400 text-sm text-center mb-6 max-w-xs">
-                  Drag &amp; drop, browse files, or take a photo with your camera
+                <div className="text-5xl sm:text-7xl mb-3 sm:mb-5 select-none">🏠</div>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-1">Upload a Room Photo</h2>
+                <p className="text-gray-400 text-sm text-center mb-5 max-w-xs px-4">
+                  Drag &amp; drop, browse files, or use your camera
                 </p>
                 <div className="flex gap-3">
                   <button
-                    className="px-5 py-2.5 bg-corgan-navy text-white text-sm font-semibold rounded-xl hover:bg-corgan-navy-dark transition-colors shadow-sm"
+                    className="px-5 py-3 bg-corgan-navy text-white text-sm font-semibold rounded-xl shadow-sm active:bg-corgan-navy-dark"
                     onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
                   >
                     Browse Files
                   </button>
                   <button
-                    className="px-5 py-2.5 border-2 border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:border-corgan-gold hover:text-corgan-navy transition-colors"
+                    className="px-5 py-3 border-2 border-gray-200 text-gray-600 text-sm font-semibold rounded-xl active:border-corgan-gold"
                     onClick={(e) => { e.stopPropagation(); cameraRef.current?.click(); }}
                   >
                     📷 Camera
@@ -252,7 +247,7 @@ export default function RoomPainter() {
               </div>
             )}
 
-            {/* Image display */}
+            {/* Image viewer */}
             {imageLoaded && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
@@ -262,156 +257,143 @@ export default function RoomPainter() {
                     onClick={() => setView("original")}
                     className={`flex-1 py-3 text-sm font-semibold transition-colors ${
                       view === "original"
-                        ? "text-corgan-navy border-b-2 border-corgan-navy bg-gray-50/50"
-                        : "text-gray-400 hover:text-gray-600"
+                        ? "text-corgan-navy border-b-2 border-corgan-navy"
+                        : "text-gray-400"
                     }`}
                   >
-                    Original Photo
+                    Original
                   </button>
                   <button
                     onClick={() => setView("generated")}
                     disabled={!generatedUrl}
                     className={`flex-1 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed ${
                       view === "generated"
-                        ? "text-corgan-gold border-b-2 border-corgan-gold bg-corgan-gold/5"
+                        ? "text-corgan-gold border-b-2 border-corgan-gold"
                         : generatedUrl
-                        ? "text-gray-400 hover:text-gray-600"
+                        ? "text-gray-400"
                         : "text-gray-200"
                     }`}
                   >
-                    ✨ AI Visualisation
+                    ✨ AI Result
                     {generatedUrl && (
-                      <span className="ml-2 inline-block w-2 h-2 rounded-full bg-corgan-teal" />
+                      <span className="ml-1.5 inline-block w-2 h-2 rounded-full bg-corgan-teal align-middle" />
                     )}
                   </button>
                 </div>
 
                 {/* Image */}
-                <div className="relative min-h-[300px] bg-gray-50 flex items-center justify-center">
+                <div className="relative bg-gray-50">
                   {generating && (
-                    <div className="absolute inset-0 bg-corgan-navy/80 flex flex-col items-center justify-center z-10 rounded-b-none">
-                      <svg className="animate-spin h-10 w-10 text-corgan-gold mb-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
-                      </svg>
-                      <p className="text-white font-semibold text-base">{LOADING_MESSAGES[loadingMsg]}</p>
-                      <p className="text-corgan-navy-light text-xs mt-2">This usually takes 20–40 seconds</p>
+                    <div className="absolute inset-0 bg-corgan-navy/85 flex flex-col items-center justify-center z-10">
+                      <Spinner className="h-10 w-10 text-corgan-gold mb-4" />
+                      <p className="text-white font-semibold text-sm px-6 text-center">{LOADING_MESSAGES[loadingMsg]}</p>
+                      <p className="text-corgan-navy-light text-xs mt-2">Usually takes 20–40 seconds</p>
                     </div>
                   )}
 
                   {view === "original" && originalUrl && (
-                    <img
-                      src={originalUrl}
-                      alt="Original room"
-                      className="w-full h-auto block"
-                      style={{ maxHeight: "65vh", objectFit: "contain" }}
-                    />
+                    <img src={originalUrl} alt="Original room" className="w-full h-auto block max-h-[55vh] object-contain" />
                   )}
-
                   {view === "generated" && generatedUrl && (
-                    <img
-                      src={generatedUrl}
-                      alt="AI-generated room with new colour"
-                      className="w-full h-auto block"
-                      style={{ maxHeight: "65vh", objectFit: "contain" }}
-                    />
+                    <img src={generatedUrl} alt="AI painted room" className="w-full h-auto block max-h-[55vh] object-contain" />
                   )}
-
                   {view === "generated" && !generatedUrl && !generating && (
-                    <div className="py-20 text-center text-gray-400">
+                    <div className="py-16 text-center text-gray-400">
                       <p className="text-4xl mb-3">🎨</p>
-                      <p className="text-sm font-medium">Select a colour and click<br /><strong className="text-corgan-gold">Paint My Room</strong> to generate</p>
+                      <p className="text-sm">Tap <strong className="text-corgan-gold">Paint My Room</strong> below to generate</p>
                     </div>
                   )}
                 </div>
 
-                {/* Colour chip overlay on generated image */}
+                {/* Colour chip on result */}
                 {view === "generated" && generatedUrl && (
                   <div className="px-4 py-2 bg-corgan-gold/10 border-t border-corgan-gold/20 flex items-center gap-2">
-                    <div
-                      className="w-5 h-5 rounded border border-black/10 shadow-sm flex-shrink-0"
-                      style={{ backgroundColor: activeColor.hex }}
-                    />
-                    <p className="text-xs font-medium text-corgan-navy">
-                      Painted in <strong>{activeColor.name}</strong>{" "}
+                    <div className="w-4 h-4 rounded border border-black/10 flex-shrink-0" style={{ backgroundColor: activeColor.hex }} />
+                    <p className="text-xs font-medium text-corgan-navy truncate">
+                      <strong>{activeColor.name}</strong>{" "}
                       <span className="font-mono text-gray-500">{activeColor.hex.toUpperCase()}</span>
                     </p>
                   </div>
                 )}
 
                 {/* Toolbar */}
-                <div className="px-4 py-3 border-t border-gray-100 flex flex-wrap items-center gap-2">
+                <div className="px-3 py-2.5 border-t border-gray-100 flex items-center gap-2">
                   <button
                     onClick={newPhoto}
-                    className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 text-xs font-medium border border-gray-200 rounded-lg bg-white active:bg-gray-50"
                   >
                     📂 New Photo
                   </button>
                   <div className="flex-1" />
                   <button
                     onClick={download}
-                    className="px-4 py-1.5 text-xs font-semibold bg-corgan-navy text-white rounded-lg hover:bg-corgan-navy-dark transition-colors shadow-sm"
+                    className="px-4 py-2 text-xs font-semibold bg-corgan-navy text-white rounded-lg shadow-sm active:bg-corgan-navy-dark"
                   >
-                    ⬇ Download {view === "generated" && generatedUrl ? "Result" : "Original"}
+                    ⬇ Download
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* ── Right: controls ── */}
-          <div className="flex flex-col gap-4">
+          {/* ── Controls column ── */}
+          <div className="flex flex-col gap-3">
+
+            {/* Before upload: how it works */}
+            {!imageLoaded && (
+              <div className="bg-corgan-navy rounded-2xl p-5 text-white">
+                <h3 className="font-bold mb-3 text-sm tracking-wide uppercase text-corgan-gold">How It Works</h3>
+                <ol className="text-xs leading-relaxed text-corgan-navy-light space-y-2 list-decimal list-inside">
+                  <li>Upload a photo of your room</li>
+                  <li>AI suggests paint colours that suit your space</li>
+                  <li>Pick a suggestion or choose your own colour</li>
+                  <li>Tap Paint My Room — AI repaints it photorealistically</li>
+                  <li>Download and share with your client</li>
+                </ol>
+                <div className="mt-4"><BrandStripe /></div>
+              </div>
+            )}
 
             {/* Step 1 — Analyse */}
             {imageLoaded && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-5 h-5 rounded-full bg-corgan-navy text-white text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                  <h3 className="font-bold text-corgan-navy text-sm tracking-wide uppercase">Analyse Room</h3>
+                  <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Analyse Room</h3>
                 </div>
-                <p className="text-xs text-gray-500 mb-4 ml-7">GPT-4o reads your photo and suggests colours that suit your space.</p>
+                <p className="text-xs text-gray-500 mb-3 ml-7">GPT-4o suggests colours that suit your space.</p>
                 <button
                   onClick={analyze}
                   disabled={analyzing}
-                  className="w-full py-2.5 bg-corgan-navy text-white font-bold text-sm rounded-xl hover:bg-corgan-navy-dark transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-corgan-navy text-white font-bold text-sm rounded-xl shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:bg-corgan-navy-dark"
                 >
-                  {analyzing ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
-                      </svg>
-                      Analysing…
-                    </>
-                  ) : (
-                    "✦ Get AI Colour Suggestions"
-                  )}
+                  {analyzing ? <><Spinner /> Analysing…</> : "✦ Get AI Colour Suggestions"}
                 </button>
                 {analyzeError && (
-                  <p className="mt-2 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">{analyzeError}</p>
+                  <p className="mt-2 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2 leading-relaxed">{analyzeError}</p>
                 )}
               </div>
             )}
 
             {/* Step 2 — Pick colour */}
             {imageLoaded && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-5 h-5 rounded-full bg-corgan-navy text-white text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
-                  <h3 className="font-bold text-corgan-navy text-sm tracking-wide uppercase">Choose Colour</h3>
+                  <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Choose Colour</h3>
                 </div>
 
                 {/* AI swatches */}
                 {recs.length > 0 && (
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-2 mb-3">
                     {recs.map((rec, i) => (
                       <button
                         key={i}
                         onClick={() => { setSelectedIdx(i); setUsingCustom(false); }}
                         className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                           !usingCustom && selectedIdx === i
-                            ? "border-corgan-gold bg-corgan-gold/5 shadow-sm"
-                            : "border-gray-100 hover:border-gray-200 bg-gray-50/50"
+                            ? "border-corgan-gold bg-corgan-gold/5"
+                            : "border-gray-100 bg-gray-50/50"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -420,7 +402,7 @@ export default function RoomPainter() {
                             style={{ backgroundColor: rec.hex }}
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-semibold text-sm text-gray-800">{rec.name}</span>
                               <span className="font-mono text-xs text-gray-400">{rec.hex.toUpperCase()}</span>
                             </div>
@@ -436,29 +418,25 @@ export default function RoomPainter() {
                           )}
                         </div>
                         {!usingCustom && selectedIdx === i && (
-                          <p className="mt-2 text-xs text-gray-600 leading-relaxed border-t border-corgan-gold/20 pt-2">
-                            {rec.reason}
-                          </p>
+                          <p className="mt-2 text-xs text-gray-600 leading-relaxed border-t border-corgan-gold/20 pt-2">{rec.reason}</p>
                         )}
                       </button>
                     ))}
                   </div>
                 )}
 
-                {/* Custom colour picker */}
+                {/* Custom picker */}
                 <div
                   onClick={() => setUsingCustom(true)}
                   className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                    usingCustom
-                      ? "border-corgan-gold bg-corgan-gold/5 shadow-sm"
-                      : "border-gray-100 hover:border-gray-200 bg-gray-50/50"
+                    usingCustom ? "border-corgan-gold bg-corgan-gold/5" : "border-gray-100 bg-gray-50/50"
                   }`}
                 >
                   <input
                     type="color"
                     value={customHex}
                     onChange={(e) => { setCustomHex(e.target.value); setUsingCustom(true); setSelectedIdx(null); }}
-                    className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-200"
+                    className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-200 flex-shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div className="flex-1">
@@ -478,102 +456,43 @@ export default function RoomPainter() {
 
             {/* Step 3 — Generate */}
             {imageLoaded && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-5 h-5 rounded-full bg-corgan-navy text-white text-xs font-bold flex items-center justify-center flex-shrink-0">3</span>
-                  <h3 className="font-bold text-corgan-navy text-sm tracking-wide uppercase">Paint My Room</h3>
+                  <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Paint My Room</h3>
                 </div>
 
-                {/* Selected colour preview */}
                 <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-xl">
-                  <div
-                    className="w-10 h-10 rounded-lg border border-black/10 shadow-sm flex-shrink-0"
-                    style={{ backgroundColor: activeColor.hex }}
-                  />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">{activeColor.name}</p>
+                  <div className="w-10 h-10 rounded-lg border border-black/10 shadow-sm flex-shrink-0" style={{ backgroundColor: activeColor.hex }} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-700 truncate">{activeColor.name}</p>
                     <p className="text-xs font-mono text-gray-500">{activeColor.hex.toUpperCase()}</p>
-                  </div>
-                </div>
-
-                {/* Quality selector */}
-                <div className="mb-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Quality</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {(["low", "medium"] as const).map((q) => {
-                      const cost = { low: "$0.011", medium: "$0.042" }[q];
-                      return (
-                        <button
-                          key={q}
-                          onClick={() => setQuality(q)}
-                          className={`py-2 px-1 rounded-lg border-2 text-center transition-all ${
-                            quality === q
-                              ? "border-corgan-gold bg-corgan-gold/5"
-                              : "border-gray-100 hover:border-gray-200 bg-gray-50"
-                          }`}
-                        >
-                          <p className="text-xs font-semibold capitalize text-gray-700">{q}</p>
-                          <p className="text-xs font-mono text-gray-400">{cost}</p>
-                        </button>
-                      );
-                    })}
                   </div>
                 </div>
 
                 <button
                   onClick={paint}
                   disabled={generating}
-                  className="w-full py-3 bg-corgan-gold text-white font-bold text-sm rounded-xl hover:bg-corgan-gold-dark transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-corgan-gold text-white font-bold text-base rounded-xl shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:bg-corgan-gold-dark"
                 >
-                  {generating ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-                        <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
-                      </svg>
-                      Generating…
-                    </>
-                  ) : (
-                    "🎨 Paint My Room"
-                  )}
+                  {generating ? <><Spinner /> Generating…</> : "🎨 Paint My Room"}
                 </button>
 
                 {paintError && (
-                  <p className="mt-2 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">{paintError}</p>
+                  <p className="mt-2 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2 leading-relaxed">{paintError}</p>
                 )}
 
-                <p className="mt-3 text-xs text-center text-gray-400">
-                  Powered by GPT Image 1 · takes ~20–40 seconds
-                </p>
-              </div>
-            )}
-
-            {/* Getting started (before upload) */}
-            {!imageLoaded && (
-              <div className="bg-corgan-navy rounded-2xl p-5 text-white">
-                <h3 className="font-bold mb-2 text-sm tracking-wide uppercase text-corgan-gold">How It Works</h3>
-                <ol className="text-xs leading-relaxed text-corgan-navy-light space-y-2 list-decimal list-inside">
-                  <li>Upload a photo of your room</li>
-                  <li>GPT-4o suggests the perfect paint colours</li>
-                  <li>Pick a colour — or choose your own</li>
-                  <li>AI repaints the room and returns a photorealistic preview</li>
-                  <li>Download and share with your client</li>
-                </ol>
-                <div className="mt-4">
-                  <BrandStripe />
-                </div>
+                <p className="mt-2.5 text-xs text-center text-gray-400">Takes ~20–40 seconds</p>
               </div>
             )}
           </div>
         </div>
       </main>
 
-      <footer className="mt-auto border-t border-gray-200 py-5 text-center">
+      <footer className="mt-auto border-t border-gray-200 py-4 text-center">
         <p className="text-xs text-gray-400">
-          © 2026 Corgan Enterprises Ltd. · Fort McMurray, AB · (587)&nbsp;275‑9376 ·{" "}
-          <a href="mailto:admin@corgan.ca" className="hover:text-corgan-gold transition-colors">
-            admin@corgan.ca
-          </a>
+          © 2026 Corgan Enterprises Ltd. · Fort McMurray, AB ·{" "}
+          <a href="mailto:admin@corgan.ca" className="hover:text-corgan-gold">admin@corgan.ca</a>
         </p>
       </footer>
     </div>
