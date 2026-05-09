@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+input[type="range"] {
+  accent-color: #0F233A;
+}
+
+input[type="color"] {
+  padding: 2px;
+  border-radius: 8px;
+  cursor: pointer;
+}
