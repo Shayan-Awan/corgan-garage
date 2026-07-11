@@ -1,10 +1,9 @@
 import OpenAI, { toFile } from "openai";
 import { NextRequest } from "next/server";
 
-const openai = new OpenAI();
-
 export async function POST(request: NextRequest) {
   try {
+    const openai = new OpenAI();
     const { imageBase64, mimeType, style, colorName, colorHex, windows, glass, hardware } =
       await request.json();
 
