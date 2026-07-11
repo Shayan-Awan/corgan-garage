@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type DoorStyle = "raised-panel" | "carriage" | "flush" | "full-view" | "ranch" | "short-panel";
@@ -219,6 +219,57 @@ function BrandStripe() {
   );
 }
 
+function GarageDoorIntro({ onDone }: { onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  // Full-screen sectional garage door that rolls up to reveal the site
+  return (
+    <div className="garage-intro fixed inset-0 z-[100] overflow-hidden pointer-events-none">
+      <div
+        className="garage-intro-door absolute inset-0 flex flex-col"
+        style={{
+          background:
+            "repeating-linear-gradient(to bottom, #E8E6E1 0px, #F2F0EB 60px, #E8E6E1 120px, #D8D5CE 122px, #C8C5BE 124px, #D8D5CE 126px)",
+          boxShadow: "inset 0 -12px 30px rgba(0,0,0,0.25)",
+        }}
+      >
+        {/* Top window row */}
+        <div className="flex justify-center gap-4 sm:gap-6 pt-8 sm:pt-12 px-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="w-16 sm:w-28 h-10 sm:h-14 rounded-sm border-2 border-[#B0ADA6]"
+              style={{
+                background: "linear-gradient(135deg, #C8E0EA 0%, #A8C8D8 50%, #C8E0EA 100%)",
+                boxShadow: "inset 0 2px 6px rgba(0,0,0,0.15)",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Logo centered on the door */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+          <div className="garage-intro-logo bg-corgan-navy rounded-2xl px-8 py-6 shadow-xl">
+            <img src="/corgan-logo-white.png" alt="Corgan Enterprises" className="h-14 sm:h-20 w-auto object-contain"/>
+          </div>
+          <p className="garage-intro-logo text-corgan-navy/60 text-xs sm:text-sm font-bold tracking-[0.25em] uppercase">
+            Garage Door Visualizer
+          </p>
+        </div>
+
+        {/* Door handles */}
+        <div className="flex justify-center gap-10 pb-10">
+          <div className="w-14 h-3 rounded-full bg-[#8A877F] shadow-sm"/>
+          <div className="w-14 h-3 rounded-full bg-[#8A877F] shadow-sm"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StepBadge({ n }: { n: number }) {
   return (
     <span className="w-5 h-5 rounded-full bg-corgan-navy text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
@@ -252,6 +303,7 @@ export default function GarageVisualizer() {
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [genError,   setGenError]   = useState("");
   const [showContact, setShowContact] = useState(false);
+  const [showIntro,  setShowIntro]  = useState(true);
 
   const loadFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) return;
@@ -353,6 +405,8 @@ export default function GarageVisualizer() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+
+      {showIntro && <GarageDoorIntro onDone={() => setShowIntro(false)}/>}
 
       {/* ── Header ── */}
       <header className="bg-corgan-navy text-white shadow-lg sticky top-0 z-20">
