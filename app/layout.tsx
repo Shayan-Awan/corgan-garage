@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Corgan Enterprises — AI Room Color Visualizer",
+  title: "Corgan Enterprises — Garage Door Visualizer",
   description:
-    "Visualize paint colors in your room with AI-powered recommendations from Corgan Enterprises.",
+    "See your new garage door before you buy. Upload a photo of your home and visualize different styles, colours, and window configurations — powered by AI.",
 };
 
 export default function RootLayout({

@@ -1,5 +1,5 @@
-import RoomPainter from "@/components/RoomPainter";
+import GarageVisualizer from "@/components/GarageVisualizer";
 
 export default function Home() {
-  return <RoomPainter />;
+  return <GarageVisualizer />;
 }
