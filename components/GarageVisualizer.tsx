@@ -410,6 +410,7 @@ export default function GarageVisualizer() {
   const [view,         setView]         = useState<"original" | "generated">("original");
 
   // Door options
+  const [doorCount, setDoorCount] = useState<1 | 2>(1);
   const [style,    setStyle]    = useState<DoorStyle>("raised-panel");
   const [color,    setColor]    = useState<DoorColor>(DOOR_COLORS[0]);
   const [windows,  setWindows]  = useState<WindowOpt>("top-row-rect");
@@ -479,6 +480,7 @@ export default function GarageVisualizer() {
         body: JSON.stringify({
           imageBase64,
           mimeType,
+          doorCount,
           style,
           colorName: color.name,
           colorHex:  color.hex,
@@ -714,10 +716,42 @@ export default function GarageVisualizer() {
           {/* ── Right: Options panel ── */}
           <div className="lg:col-span-2 flex flex-col gap-3">
 
-            {/* ── Step 1: Door Style ── */}
+            {/* ── Step 1: How Many Doors ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <StepBadge n={1}/>
+                <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">How Many Doors?</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {([1, 2] as const).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setDoorCount(n)}
+                    className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all ${
+                      doorCount === n
+                        ? "border-corgan-gold bg-corgan-gold/5"
+                        : "border-gray-100 bg-gray-50/50 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex gap-1.5">
+                      <DoorIcon style="raised-panel" size={n === 1 ? 44 : 34}/>
+                      {n === 2 && <DoorIcon style="raised-panel" size={34}/>}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-700 mt-1.5">
+                      {n === 1 ? "Single Door" : "Double / Two Doors"}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {n === 1 ? "One garage door" : "Both doors get the same style"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Step 2: Door Style ── */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <StepBadge n={2}/>
                 <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Door Style</h3>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -742,7 +776,7 @@ export default function GarageVisualizer() {
             {/* ── Step 2: Colour ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <StepBadge n={2}/>
+                <StepBadge n={3}/>
                 <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Colour</h3>
                 <span className="ml-auto text-xs font-medium text-gray-500 flex items-center gap-1">
                   <span className="w-3.5 h-3.5 rounded border border-black/10 inline-block"
@@ -770,7 +804,7 @@ export default function GarageVisualizer() {
             {/* ── Step 3: Window Configuration ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <StepBadge n={3}/>
+                <StepBadge n={4}/>
                 <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Windows</h3>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -795,7 +829,7 @@ export default function GarageVisualizer() {
             {selectedWindows && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <StepBadge n={4}/>
+                  <StepBadge n={5}/>
                   <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Glass Type</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -821,7 +855,7 @@ export default function GarageVisualizer() {
             {/* ── Step 5: Hardware ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <StepBadge n={selectedWindows ? 5 : 4}/>
+                <StepBadge n={selectedWindows ? 6 : 5}/>
                 <h3 className="font-bold text-corgan-navy text-sm uppercase tracking-wide">Hardware</h3>
               </div>
               <div className="flex flex-col gap-2">
@@ -856,7 +890,7 @@ export default function GarageVisualizer() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-corgan-navy truncate">
-                    {DOOR_STYLES.find(s => s.id === style)?.label}
+                    {doorCount === 2 ? "2× " : ""}{DOOR_STYLES.find(s => s.id === style)?.label}
                   </p>
                   <p className="text-[11px] text-gray-500">
                     {color.name} · {WINDOW_OPTS.find(w => w.id === windows)?.label}

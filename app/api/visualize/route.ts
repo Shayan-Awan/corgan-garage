@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const openai = new OpenAI();
-    const { imageBase64, mimeType, style, colorName, colorHex, windows, glass, hardware } =
+    const { imageBase64, mimeType, doorCount, style, colorName, colorHex, windows, glass, hardware } =
       await request.json();
 
     const windowDesc =
@@ -57,17 +57,23 @@ export async function POST(request: NextRequest) {
         ? "short raised-panel"
         : "raised-panel";
 
+    const doorPhrase =
+      doorCount === 2
+        ? `Replace BOTH garage doors in this image with matching ${styleLabel} garage doors. ` +
+          `Both doors must be identical in style, colour, and window configuration. `
+        : `Replace the garage door in this image with a ${styleLabel} garage door. `;
+
     const prompt =
-      `Replace the garage door(s) in this image with a ${styleLabel} garage door. ` +
+      doorPhrase +
       `The door colour is ${colorName} (${colorHex}). ` +
-      `The door has ${windowDesc}` +
+      `${doorCount === 2 ? "Each door has" : "The door has"} ${windowDesc}` +
       (windows !== "none" ? ` with ${glassDesc} glass` : "") +
       `${hardwareDesc}. ` +
       `Keep every other element of the image completely unchanged — the house facade, brickwork, siding, ` +
       `roof, driveway, landscaping, trees, sky, vehicles, and all surroundings must remain identical. ` +
       `The new garage door must look completely photorealistic: properly fitted in the garage opening, ` +
       `with correct perspective, shadows, reflections, and lighting that matches the existing scene. ` +
-      `Do not alter the size or position of the garage opening.`;
+      `Do not alter the size or position of the garage opening${doorCount === 2 ? "s" : ""}.`;
 
     const buffer = Buffer.from(imageBase64, "base64");
     const imageFile = await toFile(buffer, "garage.jpg", { type: mimeType });
