@@ -219,51 +219,169 @@ function BrandStripe() {
   );
 }
 
+function IntroRaisedPanel() {
+  // recessed bevel frame with a raised centre face, like an embossed steel panel
+  return (
+    <div
+      className="flex-1 rounded-[3px]"
+      style={{
+        background: "linear-gradient(to bottom, #D2CEC5 0%, #C4C0B6 100%)",
+        boxShadow: "inset 2px 3px 4px rgba(0,0,0,0.18), inset -2px -2px 3px rgba(255,255,255,0.55)",
+        padding: "7%",
+      }}
+    >
+      <div
+        className="w-full h-full rounded-[2px]"
+        style={{
+          background: "linear-gradient(to bottom, #F4F1EA 0%, #E7E3DA 55%, #DAD6CC 100%)",
+          boxShadow: "1px 2px 3px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.9)",
+        }}
+      />
+    </div>
+  );
+}
+
+function IntroWindow() {
+  return (
+    <div
+      className="flex-1 rounded-[3px] relative overflow-hidden"
+      style={{
+        background: "linear-gradient(to bottom, #B4B0A7 0%, #C8C4BA 100%)",
+        boxShadow: "inset 2px 3px 4px rgba(0,0,0,0.22), inset -1px -1px 2px rgba(255,255,255,0.4)",
+        padding: "6%",
+      }}
+    >
+      <div
+        className="w-full h-full rounded-[2px] relative overflow-hidden flex"
+        style={{
+          background: "linear-gradient(to bottom, #7A96A8 0%, #A8C2D0 40%, #8FAABB 100%)",
+          boxShadow: "inset 0 2px 8px rgba(0,0,0,0.35)",
+        }}
+      >
+        {/* mullions */}
+        <div className="absolute inset-y-0 left-1/3 w-[3px] bg-[#DDD9D0] shadow-sm"/>
+        <div className="absolute inset-y-0 left-2/3 w-[3px] bg-[#DDD9D0] shadow-sm"/>
+        {/* diagonal glare */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.45) 32%, rgba(255,255,255,0.1) 40%, transparent 48%, rgba(255,255,255,0.25) 62%, transparent 70%)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function GarageDoorIntro({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     const t = setTimeout(onDone, 2500);
     return () => clearTimeout(t);
   }, [onDone]);
 
-  // Full-screen sectional garage door that rolls up to reveal the site
+  // Full-screen sectional garage door that rolls up to reveal the site.
+  // 5 sections: top window section + 4 embossed raised-panel sections.
   return (
-    <div className="garage-intro fixed inset-0 z-[100] overflow-hidden pointer-events-none">
+    <div className="garage-intro fixed inset-0 z-[100] overflow-hidden pointer-events-none bg-corgan-navy-dark">
+
+      {/* lintel / header above the opening */}
       <div
-        className="garage-intro-door absolute inset-0 flex flex-col"
+        className="absolute top-0 inset-x-0 h-4 sm:h-5 z-20"
         style={{
-          background:
-            "repeating-linear-gradient(to bottom, #E8E6E1 0px, #F2F0EB 60px, #E8E6E1 120px, #D8D5CE 122px, #C8C5BE 124px, #D8D5CE 126px)",
-          boxShadow: "inset 0 -12px 30px rgba(0,0,0,0.25)",
+          background: "linear-gradient(to bottom, #3A3633 0%, #55504A 50%, #2E2B27 100%)",
+          boxShadow: "0 3px 8px rgba(0,0,0,0.5)",
         }}
-      >
-        {/* Top window row */}
-        <div className="flex justify-center gap-4 sm:gap-6 pt-8 sm:pt-12 px-6">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="w-16 sm:w-28 h-10 sm:h-14 rounded-sm border-2 border-[#B0ADA6]"
-              style={{
-                background: "linear-gradient(135deg, #C8E0EA 0%, #A8C8D8 50%, #C8E0EA 100%)",
-                boxShadow: "inset 0 2px 6px rgba(0,0,0,0.15)",
-              }}
-            />
+      />
+
+      {/* side tracks */}
+      {(["left-0", "right-0"] as const).map((side) => (
+        <div
+          key={side}
+          className={`absolute inset-y-0 ${side} w-3 sm:w-5 z-20 flex flex-col justify-around items-center`}
+          style={{
+            background: "linear-gradient(to right, #4A463F 0%, #6B665E 45%, #3A3630 100%)",
+            boxShadow: side === "left-0" ? "2px 0 6px rgba(0,0,0,0.45)" : "-2px 0 6px rgba(0,0,0,0.45)",
+          }}
+        >
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full"
+                 style={{ background: "radial-gradient(circle at 35% 35%, #8A857C, #2E2B27)" }}/>
           ))}
         </div>
+      ))}
 
-        {/* Logo centered on the door */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <div className="garage-intro-logo bg-corgan-navy rounded-2xl px-8 py-6 shadow-xl">
-            <img src="/corgan-logo-white.png" alt="Corgan Enterprises" className="h-14 sm:h-20 w-auto object-contain"/>
+      {/* the door itself */}
+      <div className="garage-intro-door absolute inset-0 px-3 sm:px-5 pt-4 sm:pt-5">
+        <div className="garage-intro-rumble w-full h-full flex flex-col relative"
+             style={{ boxShadow: "0 10px 25px rgba(0,0,0,0.55)" }}>
+
+          {/* Section 1 — windows */}
+          <div
+            className="flex gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-4"
+            style={{
+              flex: "0 0 17%",
+              background: "linear-gradient(to bottom, #F2EFE8 0%, #E5E1D8 70%, #D5D1C7 100%)",
+              borderBottom: "1px solid rgba(0,0,0,0.28)",
+              boxShadow: "inset 0 -2px 3px rgba(0,0,0,0.12), inset 0 2px 2px rgba(255,255,255,0.7)",
+            }}
+          >
+            {[0, 1, 2, 3].map((i) => <IntroWindow key={i}/>)}
           </div>
-          <p className="garage-intro-logo text-corgan-navy/60 text-xs sm:text-sm font-bold tracking-[0.25em] uppercase">
-            Garage Door Visualizer
-          </p>
-        </div>
 
-        {/* Door handles */}
-        <div className="flex justify-center gap-10 pb-10">
-          <div className="w-14 h-3 rounded-full bg-[#8A877F] shadow-sm"/>
-          <div className="w-14 h-3 rounded-full bg-[#8A877F] shadow-sm"/>
+          {/* Sections 2–5 — embossed raised panels */}
+          {[0, 1, 2, 3].map((row) => (
+            <div
+              key={row}
+              className="flex gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-4 flex-1"
+              style={{
+                background: "linear-gradient(to bottom, #F2EFE8 0%, #E5E1D8 70%, #D5D1C7 100%)",
+                borderBottom: row < 3 ? "1px solid rgba(0,0,0,0.28)" : "none",
+                boxShadow: "inset 0 -2px 3px rgba(0,0,0,0.12), inset 0 2px 2px rgba(255,255,255,0.7)",
+              }}
+            >
+              {[0, 1, 2, 3].map((i) => <IntroRaisedPanel key={i}/>)}
+            </div>
+          ))}
+
+          {/* lift handle on second-from-bottom section */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-[23%] flex items-center justify-center z-10">
+            <div className="w-16 sm:w-20 h-3.5 sm:h-4 rounded-full"
+                 style={{
+                   background: "linear-gradient(to bottom, #9A958C 0%, #6B665E 50%, #4A463F 100%)",
+                   boxShadow: "0 2px 4px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.5)",
+                 }}/>
+          </div>
+
+          {/* logo badge centered on the door */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+            <div className="garage-intro-logo bg-corgan-navy rounded-2xl px-8 py-6"
+                 style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
+              <img src="/corgan-logo-white.png" alt="Corgan Enterprises" className="h-14 sm:h-20 w-auto object-contain"/>
+            </div>
+            <p className="garage-intro-logo text-corgan-navy/70 text-xs sm:text-sm font-bold tracking-[0.25em] uppercase"
+               style={{ textShadow: "0 1px 0 rgba(255,255,255,0.6)" }}>
+              Garage Door Visualizer
+            </p>
+          </div>
+
+          {/* ambient lighting: darker edges, soft top light */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 120% 90% at 50% 35%, transparent 55%, rgba(0,0,0,0.18) 100%), linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, transparent 12%)",
+            }}
+          />
+
+          {/* rubber bottom seal */}
+          <div
+            className="absolute bottom-0 inset-x-0 h-2.5 sm:h-3"
+            style={{
+              background: "linear-gradient(to bottom, #2A2825 0%, #1A1917 60%, #0E0D0C 100%)",
+              boxShadow: "0 2px 5px rgba(0,0,0,0.6)",
+            }}
+          />
         </div>
       </div>
     </div>
